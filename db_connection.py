@@ -47,11 +47,46 @@ def total_expenses():
     print(f"\n Total money spent: {total}\n")
     conn.close()
 
+def delete_expenses():
+    view_expenses()
+    expense_id=input("Enter the ID to Delete: ")
+
+    conn=sqlite3.connect("tracker.db")
+    cursor=conn.cursor()
+
+    cursor.execute("DELETE FROM Expenses WHERE id=?", (expense_id,))
+    if cursor.rowcount==0:
+        print("ID not found please provide correct ID")
+    else:
+        print("Expenses Deleted Sucessfully! ")
+    conn.commit()
+    conn.close()
+    
+
+def update_expenses():
+    view_expenses()
+    expense_id=input("Enter the ID to update: ")
+    new_amount=input("Enter new amount: ")
+
+    conn=sqlite3.connect("tracker.db")
+    cursor=conn.cursor()
+
+    conn.execute("UPDATE Expenses SET amount=? WHERE id=?",(new_amount,expense_id))
+    if cursor.rowcount==0:
+        print("No Expenses found with that ID.")
+    else:
+        print("Expenses updated Sucessfully!")
+    conn.commit()
+    conn.close()
+
+
 while True:
     print("1. Add Expenses")
     print("2. View Expenses")
-    print("3. Total expenses")
-    print("4. Exit")
+    print("3. Total Expenses")
+    print("4. Delete Expenses")
+    print("5. Update Expenses")
+    print("6. Exit")
 
     choice= input("Choose option: ")
 
@@ -62,6 +97,10 @@ while True:
     elif choice=="3":
         total_expenses()
     elif choice=="4":
+        delete_expenses()
+    elif choice=="5":
+        update_expenses()
+    elif choice=="6":
         print("Thank you!") 
         break
     else:
