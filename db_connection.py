@@ -1,18 +1,34 @@
 import sqlite3
+import pandas as pd
+def create_table():
+    conn=sqlite3.connect("tracker.db")
+    cursor=conn.cursor()
 
+    cursor.execute("""CREATE TABLE IF NOT EXISTS Expenses(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    amount REAL,
+    date TEXT
+);
+                   """)
+    conn.commit()
+    conn.close()
 def add_expenses():
+    from datetime import datetime
+     
     conn=sqlite3.connect("tracker.db")
 
     cursor=conn.cursor()
 
+    name=input("Enter Category (food/travel/other): ")
     amount=float(input("Enter expense amount: "))
-    category=input("Enter Category (food/travel/other): ")
-    date=input("Enter date (DD-MM-YYYY): ")
+    # date=input("Enter date (DD-MM-YYYY): ")
+    date=datetime.now().strftime("%d/%m/%Y")
 
 
     cursor.execute(
-        "INSERT INTO Expenses (amount,category,date) VALUES(?,?,?)",
-        (amount, category, date)
+        "INSERT INTO Expenses (name,amount,date) VALUES(?,?,?)",
+        ( name,amount, date)
     )
 
     conn.commit()
@@ -28,10 +44,11 @@ def view_expenses():
     cursor.execute("SELECT * FROM Expenses")
     rows=cursor.fetchall()
 
-    print("\n--- Your Expenses ---")
+    print("\nID | Name | Amount | Date")
+    print('-'*35)
+
     for row in rows:
-        print(f"ID{row[0]}| Amount: {row[1]} | category: {row[2]} | Date: {row[3]}")  
-    print("-------------\n")
+        print(row[0], "|",row[1],"|", row[2],"|", row[3])  
     conn.close()
 
 
@@ -44,7 +61,8 @@ def total_expenses():
 
     if total is None:
         total=0
-    print(f"\n Total money spent: {total}\n")
+    else:
+        print(f"\n Total money spent: {total}\n")
     conn.close()
 
 def delete_expenses():
@@ -79,6 +97,40 @@ def update_expenses():
     conn.commit()
     conn.close()
 
+def search_expenses():
+    keyword=input("Enter name to search: ")
+
+    conn=sqlite3.connect("tracker.db")
+    cursor=conn.cursor()
+
+    cursor.execute("SELECT * FROM Expenses WHERE name LIKE ?", ( "%"+ keyword +"%",))
+    results=cursor.fetchall()
+
+    if len(results)==0:
+        print("No matching expenses found")
+    else:
+        for r in results:
+            print(r)
+    
+    conn.close()
+
+def export_csv():
+    conn=sqlite3.connect("tracker.db")
+    query="SELECT * FROM Expenses"
+    df=pd.read_sql_query(query,conn)
+
+    if df.empty:
+        print("No Data to export")
+    else:
+        df.to_csv("Expenses_report.csv",index=False)
+        print("Report Exported as expenses_report.csv")
+    
+    conn.close()
+
+
+
+
+create_table()
 
 while True:
     print("1. Add Expenses")
@@ -86,7 +138,9 @@ while True:
     print("3. Total Expenses")
     print("4. Delete Expenses")
     print("5. Update Expenses")
-    print("6. Exit")
+    print("6. Search Expenses")
+    print("7. Export Report(CSV)")
+    print("8. Exit")
 
     choice= input("Choose option: ")
 
@@ -101,6 +155,10 @@ while True:
     elif choice=="5":
         update_expenses()
     elif choice=="6":
+        search_expenses()
+    elif choice=="7":
+        export_csv()
+    elif choice=="8":
         print("Thank you!") 
         break
     else:
