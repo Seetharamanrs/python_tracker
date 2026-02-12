@@ -127,8 +127,27 @@ def export_csv():
     
     conn.close()
 
+def monthly_summary():
+    conn=sqlite3.connect("tracker.db")
+    cursor=conn.cursor()
 
+    cursor.execute("""
+        SELECT  substr(date,1,7) AS month, SUM(amount)
+        FROM expenses
+        GROUP BY month
+        ORDER BY month
+                  """)
+    results=cursor.fetchall()
 
+    if len(results)==0:
+        print("No data available")
+    else:
+        print("\nMonthly Spending:")
+        print("-------------------")
+        for row in results:
+            print(row[0],":$",row[1])
+
+    conn.close()
 
 create_table()
 
@@ -139,8 +158,9 @@ while True:
     print("4. Delete Expenses")
     print("5. Update Expenses")
     print("6. Search Expenses")
-    print("7. Export Report(CSV)")
-    print("8. Exit")
+    print("7. Monthly Summary")
+    print("8. Export Report(CSV)")
+    print("9. Exit")
 
     choice= input("Choose option: ")
 
@@ -157,8 +177,10 @@ while True:
     elif choice=="6":
         search_expenses()
     elif choice=="7":
-        export_csv()
+        monthly_summary()
     elif choice=="8":
+        export_csv()
+    elif choice=="9":
         print("Thank you!") 
         break
     else:
