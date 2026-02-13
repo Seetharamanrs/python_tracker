@@ -1,1 +1,3 @@
 tracker.db
+*.csv
+pychache/
