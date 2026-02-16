@@ -1,5 +1,7 @@
 import sqlite3
 import pandas as pd
+import matplotlib.pyplot as plt
+
 def create_table():
     conn=sqlite3.connect("tracker.db")
     cursor=conn.cursor()
@@ -29,7 +31,7 @@ def add_expenses():
         except ValueError:
             print("Please enter the valid number")
     # date=input("Enter date (DD-MM-YYYY): ")
-    date=datetime.now().strftime("%Y/%m/%d")
+    date=datetime.now().strftime("%Y-%m-%d")
 
 
     cursor.execute(
@@ -127,31 +129,67 @@ def export_csv():
 
     if df.empty:
         print("No Data to export")
-    else:
-        df.to_csv("Expenses_report.csv",index=False)
-        print("Report Exported as expenses_report.csv")
+    df['date']=pd.to_datetime(df['date'])
+
+    df['month']=df['date'].dt.strftime("%Y-%m")
+    df['day_name']=df['date'].dt.day_name()
+
+    monthly_summary = df.groupby('month')['amount'].sum().reset_index()
+    df.to_csv("Expenses_full_report.csv", index=False)
+    monthly_summary.to_csv("Monthly_summary.csv", index=False)  
+
+    print("Reports Generated:")
+    print(" - Expenses_full_report.csv")
+    print(" - Monthly_summary.csv")  
     
     conn.close()
-
-def monthly_summary():
-    conn=sqlite3.connect("tracker.db")
+def plot_monthly_chart():
+    conn=sqlite3.connect("tracekr.db")
     cursor=conn.cursor()
+    query="""SELECT strftime(%Y-%m,date) AS month,
+    SUM(amount) as total
+    FROM Expenses 
+    GROUP BY month
+    ORDER BY month;
+    """
+    cursor.execute(query)
+    data=cursor.fetchall()
 
-    cursor.execute("""
-        SELECT  substr(date,1,7) AS month, SUM(amount)
-        FROM expenses
-        GROUP BY month
-        ORDER BY month
-                  """)
-    results=cursor.fetchall()
+    if len(data)==0:
+        print("No Data to plot sorry!")
+        return
+    month=[row[0]for row in data]
+    totals=[row[1]for row in data]
 
-    if len(results)==0:
-        print("No data available")
-    else:
-        print("\nMonthly Spending:")
-        print("-------------------")
-        for row in results:
-            print(row[0],":$",row[1])
+    plt.figure()
+    plt.plot(month,totals,marker='o')
+    plt.xlabel("MONTHS")
+    plt.ylabel("TOTAL SPENDING")
+    plt.title("MONTHLY SPENDING CHART")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+    conn.close()
+
+# def monthly_summary():
+#     conn=sqlite3.connect("tracker.db")
+#     cursor=conn.cursor()
+
+#     cursor.execute("""
+#         SELECT  substr(date,1,7) AS month, SUM(amount)
+#         FROM expenses
+#         GROUP BY month
+#         ORDER BY month
+#                   """)
+#     results=cursor.fetchall()
+
+#     if len(results)==0:
+#         print("No data available")
+#     else:
+#         print("\nMonthly Spending:")
+#         print("-------------------")
+#         for row in results:
+#             print(row[0],":$",row[1])
 
     conn.close()
 def cateogry_summary():
@@ -172,6 +210,28 @@ def cateogry_summary():
         print(row[0], ": ₹", row[1])
 
     conn.close()
+
+def monthly_report():
+    conn=sqlite3.connect('tracker.db')
+    cursor=conn.cursor()
+    query=""" SELECT 
+    strftime('%Y-%m',date)AS month,
+    SUM(amount) AS total_spent
+FROM Expenses
+GROUP BY month
+ORDER BY month;
+
+
+
+"""
+    cursor.execute(query)
+    rows=cursor.fetchall()
+    print("\n Monthly spending")
+    print("-------------------")
+    for row in rows:
+        print(f"{row[0]}:$ {row[1]}")
+    conn.close()
+
 def main():
     create_table()
 
@@ -182,10 +242,12 @@ def main():
         print("4. Delete Expenses")
         print("5. Update Expenses")
         print("6. Search Expenses")
-        print("7. Monthly Summary")
-        print("8. Category Summary")
-        print("9. Export Report(CSV)")
-        print("10. Exit")
+        # print("7. Monthly Summary")
+        print("7. Category Summary")
+        print("8. Monthly report")
+        print("9. Monthly Chart")
+        print("10. Export Report(CSV)")
+        print("11. Exit")
 
         choice= input("Choose option: ")
 
@@ -201,13 +263,17 @@ def main():
             update_expenses()
         elif choice=="6":
             search_expenses()
+        # elif choice=="7":
+        #     monthly_summary()
         elif choice=="7":
-            monthly_summary()
-        elif choice=="8":
             cateogry_summary()
+        elif choice=="8":
+            monthly_report()
         elif choice=="9":
-            export_csv()
+            plot_monthly_chart()
         elif choice=="10":
+            export_csv()
+        elif choice=="11":
             print("Thank you!") 
             break
         else:
