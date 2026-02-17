@@ -1,0 +1,14 @@
+1.What problem does my project solve?
+The project solves the problem of people not knowing where their money is going.
+It helps track daily expenses and understand spending habits.
+2.What database I used?
+I used SQLite as the database to store all expense records.
+3.What library I used for graph?
+I used matplotlib to generate a monthly spending chart for visualization.
+4.One difficulty I faced?
+Main difficulty: date format issue. SQLite could not group months correctly.
+5.How I fixed it?
+Fix: I converted user input date into standard format YYYY-MM-DD before storing in database.
+
+
+
