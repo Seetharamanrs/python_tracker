@@ -144,15 +144,15 @@ def export_csv():
     
     conn.close()
 def plot_monthly_chart():
-    conn=sqlite3.connect("tracekr.db")
+    conn=sqlite3.connect("tracker.db")
     cursor=conn.cursor()
-    query="""SELECT strftime(%Y-%m,date) AS month,
+    query1="""SELECT strftime('%Y-%m',DATE("date")) AS month,
     SUM(amount) as total
     FROM Expenses 
     GROUP BY month
     ORDER BY month;
     """
-    cursor.execute(query)
+    cursor.execute(query1)
     data=cursor.fetchall()
 
     if len(data)==0:
@@ -215,14 +215,11 @@ def monthly_report():
     conn=sqlite3.connect('tracker.db')
     cursor=conn.cursor()
     query=""" SELECT 
-    strftime('%Y-%m',date)AS month,
+    strftime('%Y-%m',DATE("date"))AS month,
     SUM(amount) AS total_spent
 FROM Expenses
 GROUP BY month
 ORDER BY month;
-
-
-
 """
     cursor.execute(query)
     rows=cursor.fetchall()
